@@ -24,28 +24,18 @@ const Login = () => {
     resolver: yupResolver(schema),
   });
 
-  const handleLogin = async (data) => {
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("email", data.email)
-      .single();
+  const handleLogin = async (formData) => {
+    const { email, password } = formData;
 
-    if (error || !user) {
-      toast.error("User not found!");
-      return;
-    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-    const matched = bcrypt.compareSync(data.password, user.password);
-    if (matched) {
+    if (error) {
+      toast.error(error.message);
+    } else {
       toast.success("Login successful!");
       setTimeout(() => router.push("/about"), 2000);
-    } else {
-      toast.error("Incorrect password!");
     }
   };
-  
-  
   return (
     <>
       <section className="min-h-screen w-full flex justify-center items-center bg-gray-100">
