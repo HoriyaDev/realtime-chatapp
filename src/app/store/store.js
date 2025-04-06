@@ -1,5 +1,4 @@
-// store.js
-import{ create} from "zustand";
+import { create } from "zustand";
 
 const useUserStore = create((set) => ({
   user: null,  
@@ -7,4 +6,10 @@ const useUserStore = create((set) => ({
   resetUser: () => set({ user: null }),  
 }));
 
-export default useUserStore;
+const useUserIdStore = create((set) => ({
+  selectedUser: null,  
+  setSelectedUser: (user) => set({ user }),  
+  resetSelectedUser: () => set({ user: null }),  
+}));
+
+export { useUserStore, useUserIdStore };

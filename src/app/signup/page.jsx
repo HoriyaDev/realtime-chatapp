@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { toast } from "react-hot-toast";
-import useUserStore from "../store/store";
+import {useUserStore} from "../store/store";
 
 const Signup = () => {
   const [image, setImage] = useState(null);
@@ -83,11 +83,16 @@ const Signup = () => {
       return;
     }
 
+    const {data: userData, error: userError} = await supabase.auth.getUser()
+    const userId = userData?.user?.id;
+
     // ✅ Save User Data to Database
     const { error: insertError } = await supabase.from("users").insert([
       {
         name: userName,
         email: email,
+        auth_id: userId,
+        password: password,
         profile_pic: imageUrl,
       },
     ]);
@@ -105,7 +110,7 @@ const Signup = () => {
     });
 
     toast.success("Sign Up Successful!");
-    setTimeout(() => router.push("/login"), 2000);
+    setTimeout(() => router.push("/login"), 1000);
   };
 
   return (

@@ -33,7 +33,12 @@ const Login = () => {
       toast.error(error.message);
     } else {
       toast.success("Login successful!");
-      setTimeout(() => router.push("/about"), 2000);
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      console.log(userId) // Get logged-in user's ID
+      if (userId) {
+        setTimeout(() => router.push(`/chat/${userId}`), 2000); // ✅ Redirect dynamically
+      }
     }
   };
   return (
