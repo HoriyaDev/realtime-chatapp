@@ -10,9 +10,7 @@ const Sidebar = () => {
   const [userId, setUserId] = useState(null);
   const [otherUsers, setOtherUsers] = useState([]);
 
-  const router = useRouter();
-
-  const setSelectedUser = useUserIdStore(state => state.setSelectedUser)
+  const setSelectedUser = useUserIdStore(state => state.setSelectedUser); // Store action to update selected user
 
   const fetchUserAndOthers = async () => {
     const { data: authData } = await supabase.auth.getUser();
@@ -40,28 +38,24 @@ const Sidebar = () => {
   }, []);
 
   const handleClick = (user) => {
-    setSelectedUser(user);
-  // This updates the selectedUser in Zustand store
+    setSelectedUser(user); // Updates Zustand store with the selected user
   };
 
- 
-
   return (
-    <>
-      <div className="w-1/4 bg-gray-800 text-white p-4">
-        <h2 className="text-lg font-bold mb-4">Users</h2>
-        {otherUsers.map((u) => (
-          <div
-            key={u.id}
-            className="py-2 border-b text-white border-gray-600 cursor-pointer"
-            onClick={() => handleClick(u)}
-          >
-            {u.name}
-          </div>
-        ))}
-      </div>
-    </>
+    <div className="w-1/4 bg-gray-800 text-white p-4">
+      <h2 className="text-lg font-bold mb-4">Users</h2>
+      {otherUsers.map((u) => (
+        <div
+          key={u.id}
+          className="py-2 border-b text-white border-gray-600 cursor-pointer"
+          onClick={() => handleClick(u)} // On click, update selected user
+        >
+          {u.name}
+        </div>
+      ))}
+    </div>
   );
 };
 
 export default Sidebar;
+

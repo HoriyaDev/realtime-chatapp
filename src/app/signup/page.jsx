@@ -106,8 +106,13 @@ const Signup = () => {
     useUserStore.getState().setUser({
       userName,
       email,
+      password,
+      auth_id: userId,
       profilePic: imageUrl,
     });
+
+
+    console.log(useUserStore.getState().user);
 
     toast.success("Sign Up Successful!");
     setTimeout(() => router.push("/login"), 1000);
