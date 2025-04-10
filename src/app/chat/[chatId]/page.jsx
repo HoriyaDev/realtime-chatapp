@@ -9,7 +9,7 @@ import { useUserStore } from "@/app/store/store"; // Import the store
 
 const ChatWindow = () => {
   const [sendMessage, setSendMessage] = useState("");
-  const [showMessage, setShowMessage] = useState("");
+  const [showMessage, setShowMessage] = useState([]);
 
   const selectedUser = useUserIdStore((state) => state.selectedUser);
   const name = selectedUser?.name;
@@ -18,12 +18,12 @@ const ChatWindow = () => {
 
 
   const handleSendMessage = async () => {
-    // Get the current user from Supabase auth
+  
     const authUser = await supabase.auth.getUser();
-    console.log('Authenticated User:', authUser); // Log the full user object
+    console.log('Authenticated User:', authUser); 
     
-    const userId = authUser?.data?.user?.id; 
- // Extract the user ID from the authenticated user object
+     const userId = authUser?.data?.user?.id; 
+
   
     console.log("Authenticated user ID:", userId);
     console.log("Logged user ID:", loggedUser?.auth_id);
@@ -40,7 +40,7 @@ const ChatWindow = () => {
       .from("messages")
       .insert([
         {
-          sender_id: loggedUser?.auth_id,
+          sender_id: userId,
           receiver_id: selectedUser?.auth_id,
           message: sendMessage,
         },
@@ -55,7 +55,6 @@ const ChatWindow = () => {
     }
   };
   
-  
   useEffect(() => {
     if (!loggedUser?.auth_id || !selectedUser?.auth_id) {
       console.log("User or selected user data is not available yet.");
@@ -63,19 +62,22 @@ const ChatWindow = () => {
     }
   
     const fetchMessages = async () => {
+      const auth = await supabase.auth.getUser();
+      const user_id = auth?.data?.user?.id;  // Get authenticated user ID inside fetchMessages
+  
       try {
         const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('sender_id', loggedUser.auth_id)
-          .eq('receiver_id', selectedUser.auth_id)
+          .from("messages")
+          .select("*")
+          .eq("sender_id", user_id)  // Use user_id here
+          .eq("receiver_id", selectedUser.auth_id)
           .order("created_at", { ascending: false });
   
         if (error) {
           console.error("Error fetching messages:", error);
         } else {
           console.log("Fetched messages:", data);
-          setShowMessage(data)
+          setShowMessage(data);
         }
       } catch (error) {
         console.error("Error while fetching messages:", error);
@@ -83,8 +85,9 @@ const ChatWindow = () => {
     };
   
     fetchMessages();
-  }, []);  // Use specific properties as dependencies
-  
+  }, [loggedUser?.auth_id, selectedUser?.auth_id]); // Use these as dependencies
+   // Use these as dependencies
+
   return (
     <div className="flex flex-col justify-between h-screen p-4">
       {/* Displaying the user's name at the top */}
@@ -97,8 +100,17 @@ const ChatWindow = () => {
 
 
       <div>
-        {showMessage}
+  {showMessage && showMessage.length > 0 ? (
+    showMessage.map((msg) => (
+      <div key={msg.id} className="message">
+        <p>{msg.message}</p> {/* Adjust based on your data structure */}
       </div>
+    ))
+  ) : (
+    <p>No messages yet</p>
+  )}
+</div>
+
         <input
           type="text"
           placeholder="Type a message"
