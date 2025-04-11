@@ -11,18 +11,18 @@ const useUserStore = create(
       isLoggedIn: false,
       signupData: null,
 
-      // Set user after login
+      
       setUser: (userData) => set({ user: userData, isLoggedIn: true }),
 
-      // Reset user
+    
       resetUser: () => set({ user: null, isLoggedIn: false }),
 
-      // Set signup data
+      
       setSignupData: (signupData) =>
         set({ signupData, isLoggedIn: false }),
     }),
     {
-      name: 'user-store', // key name in localStorage
+      name: 'user-store', 
       partialize: (state) => ({
         user: state.user,
         isLoggedIn: state.isLoggedIn,

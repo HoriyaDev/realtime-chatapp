@@ -65,12 +65,11 @@ const ChatWindow = () => {
     }
   };
 
-  // ✅ Scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [showMessage]);
 
-  // ✅ Fetch messages when user changes
+
   useEffect(() => {
     if (selectedUser && senderId) {
       fetchMessages();
@@ -78,6 +77,31 @@ const ChatWindow = () => {
   }, [selectedUser, senderId]);
 
 
+  useEffect(() => {
+    if (!senderId || !receiverId) return;
+
+   
+    const channel = supabase
+      .channel('realtime-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `receiver_id=eq.${senderId}`,
+        },
+        (payload) => {
+          console.log('📥 New message received:', payload.new);
+          setShowMessage((prev) => [...prev, payload.new]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel); 
+    };
+  }, [senderId, receiverId]);
 
   return (
     <div className="flex flex-col justify-between h-screen p-4">
