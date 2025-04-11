@@ -10,9 +10,12 @@ import supabase from "../lib/supabase";
  import { toast } from "react-hot-toast";
  import { useRouter } from "next/navigation";
  import Link from "next/link";
+ import {useUserStore} from "../store/store";
  
  const Login = () => {
  
+const setUser = useUserStore((state)=>state.setUser)
+  const user = useUserStore((state)=>state.user)
    const router = useRouter();
  
    const schema = yup.object({
@@ -25,7 +28,11 @@ import supabase from "../lib/supabase";
    });
  
    const handleLogin = async (formData) => {
+
+    console.log("stored user" , user) 
      const { email, password } = formData;
+
+
  
      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
  
@@ -33,7 +40,9 @@ import supabase from "../lib/supabase";
        toast.error(error.message);
      } else {
        toast.success("Login successful!");
-       setTimeout(() => router.push("/about"), 2000);
+        setUser(data.user) // Set the user in the store
+        console.log("User immediately from store:", useUserStore.getState().user); // Log the user object
+     
        const { data: userData } = await supabase.auth.getUser();
        const userId = userData?.user?.id;
        console.log(userId) // Get logged-in user's ID
@@ -42,6 +51,9 @@ import supabase from "../lib/supabase";
        }
      }
    };
+
+
+  
   return (
     <>
       <section className="min-h-screen w-full flex justify-center items-center bg-gray-100">

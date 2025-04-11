@@ -9,13 +9,16 @@ import supabase from "../lib/supabase";
  import { toast } from "react-hot-toast";
 
  import {useUserStore} from "../store/store";
+
  
  const Signup = () => {
    const [image, setImage] = useState(null);
    const [imageFile, setImageFile] = useState(null);
    const router = useRouter();
 
-   const setUser = useUserStore((state) => state.setUser);
+   const setSignupData = useUserStore((state) => state.setSignupData) 
+   const signupData = useUserStore((state)=>state.signupData)
+
  
    // ✅ Validation Schema
    const schema = yup.object({
@@ -105,13 +108,17 @@ import supabase from "../lib/supabase";
        return;
      }
  
-     // ✅ Store User Info in Zustand Store
-     useUserStore.getState().setUser({
+    
+     setSignupData({
        userName,
+       auth_id: userId,
        email,
+       password,
        profilePic: imageUrl,
      });
- 
+     const latestData = useUserStore.getState().signupData;
+     console.log("Latest Store user:", latestData);
+    
      toast.success("Sign Up Successful!");
     
      setTimeout(() => router.push("/login"), 1000);

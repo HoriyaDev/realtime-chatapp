@@ -1,87 +1,101 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { useSelectedUserStore, useUserIdStore } from '@/app/store/store';
+import React, { useEffect, useRef, useState } from 'react';
+import { useSelectedUserStore, useUserStore } from '@/app/store/store';
 import supabase from '@/app/lib/supabase';
-import { useUserStore } from '@/app/store/store';
 
 const ChatWindow = () => {
   const [sendMessage, setSendMessage] = useState('');
   const [showMessage, setShowMessage] = useState([]);
+  const messagesEndRef = useRef(null);
 
-  const selectedUser =useSelectedUserStore((state) => state.selectedUser);
-  const name = selectedUser?.name;
-
+  const selectedUser = useSelectedUserStore((state) => state.selectedUser);
   const loggedUser = useUserStore((state) => state.user);
 
-  const fetchMessages = async () => {
-    const authUser = await supabase.auth.getUser();
-    const userId = authUser?.data?.user?.id;
+  const selectedUserName = selectedUser?.name || 'No user selected';
+  const senderId = loggedUser?.id;
+  const receiverId = selectedUser?.auth_id;
 
-    if (!userId || !selectedUser?.auth_id) return;
+  // ✅ Fetch messages from Supabase
+  const fetchMessages = async () => {
+    if (!senderId || !receiverId) return;
 
     const { data, error } = await supabase
       .from('messages')
       .select('*')
       .or(
-        `and(sender_id.eq.${userId},receiver_id.eq.${selectedUser.auth_id}),and(sender_id.eq.${selectedUser.auth_id},receiver_id.eq.${userId})`
+        `and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`
       )
       .order('created_at', { ascending: true });
 
-    if (!error) {
-      setShowMessage(data);
+    if (error) {
+      console.error('❌ Error fetching messages:', error.message);
     } else {
-      console.error('Error fetching messages:', error.message);
+      setShowMessage(data);
     }
   };
 
   // ✅ Send a new message
   const handleSendMessage = async () => {
-    const authUser = await supabase.auth.getUser();
-    const userId = authUser?.data?.user?.id;
+    console.log('Sending message:', sendMessage);
+    console.log('Sender:', senderId, 'Receiver:', receiverId);
 
-    if (!userId || !sendMessage || !selectedUser?.auth_id) return;
+    if (!senderId || !receiverId || !sendMessage.trim()) {
+      console.warn('⚠️ Missing data for sending message');
+      return;
+    }
 
-    const { data, error } = await supabase.from('messages').insert([
-      {
-        sender_id: userId,
-        receiver_id: selectedUser.auth_id,
-        message: sendMessage,
-      },
-    ]).select(); // select() returns the inserted row
+    const { data, error } = await supabase
+      .from('messages')
+      .insert([
+        {
+          sender_id: senderId,
+          receiver_id: receiverId,
+          message: sendMessage.trim(),
+        },
+      ])
+      .select();
 
-    if (!error && data.length > 0) {
-      setShowMessage((prevMessages) => [...prevMessages, data[0]]);
-      setSendMessage(''); // clear input
-    } else {
-      console.error('Error sending message:', error.message);
+    if (error) {
+      console.error('❌ Error sending message:', error.message);
+    } else if (data.length > 0) {
+      setShowMessage((prev) => [...prev, data[0]]);
+      setSendMessage('');
+      console.log('✅ Message sent successfully:', data[0]);
     }
   };
 
-  // ✅ Fetch messages when selectedUser changes
+  // ✅ Scroll to latest message
   useEffect(() => {
-    if (selectedUser) {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [showMessage]);
+
+  // ✅ Fetch messages when user changes
+  useEffect(() => {
+    if (selectedUser && senderId) {
       fetchMessages();
     }
-  }, [selectedUser]);
+  }, [selectedUser, senderId]);
+
+
 
   return (
     <div className="flex flex-col justify-between h-screen p-4">
-      {/* Header with user name */}
-      <div className="bg-red-300 p-4 rounded">
-        {name ? name : 'No user selected'}
+      {/* Header */}
+      <div className="bg-red-300 p-4 rounded font-semibold text-lg">
+        {selectedUserName}
       </div>
 
-      {/* Message List */}
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto mt-4 mb-2">
         {showMessage.length > 0 ? (
           showMessage.map((msg) => (
             <div
               key={msg.id}
-              className={`p-2 m-1 rounded ${
-                msg.sender_id ===loggedUser?.auth_id
-                  ? 'bg-blue-100 text-right'
-                  : 'bg-gray-100 text-left'
+              className={`p-2 m-1 rounded max-w-[75%] ${
+                msg.sender_id === senderId
+                  ? 'bg-blue-100 text-right ml-auto'
+                  : 'bg-gray-100 text-left mr-auto'
               }`}
             >
               <p>{msg.message}</p>
@@ -90,9 +104,10 @@ const ChatWindow = () => {
         ) : (
           <p className="text-center text-gray-400">No messages yet</p>
         )}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Message input */}
+      {/* Input */}
       <div className="flex items-center space-x-2">
         <input
           type="text"
@@ -100,6 +115,9 @@ const ChatWindow = () => {
           className="flex-1 p-2 border border-gray-300 rounded"
           value={sendMessage}
           onChange={(e) => setSendMessage(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleSendMessage();
+          }}
         />
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded"
