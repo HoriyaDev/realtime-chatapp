@@ -1,19 +1,20 @@
-import { create } from "zustand";
+'use client'
 
 
-
-
-const useUserStore = create((set) => ({
-  user: null,
-  setUser: (userData) => set({ user: userData }),
-  clearUser: () => set({ user: null }),
-}));
-
-
-const useUserIdStore = create((set) => ({
-  selectedUser: null,  
-  setSelectedUser: (user) => set({ selectedUser: user}),  
-  resetSelectedUser: () => set({ selectedUser: null }),  
-}));
-
-export { useUserStore, useUserIdStore };
+import{ create} from "zustand";
+ 
+ 
+ const useUserStore = create((set) => ({
+   user: null,  
+   setUser: (userData) => set({ user: userData }),  
+   resetUser: () => set({ user: null }),  
+ }));
+ 
+ export default useUserStore;
+ const useSelectedUserStore = create((set) => ({
+   selectedUser: null,  
+   setSelectedUser: (user) => set({ selectedUser: user }),  
+   resetSelectedUser: () => set({ selectedUser: null }),  
+ }));
+ 
+ export { useUserStore,useSelectedUserStore };

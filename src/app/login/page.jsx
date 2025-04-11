@@ -1,48 +1,47 @@
 "use client";
+ 
+ 
+ 
+import supabase from "../lib/supabase";
 
-import { supabase } from "../lib/supabase";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import * as yup from "yup";
-import { toast } from "react-hot-toast";
-import Link from "next/link";
-
-const Login = () => {
-  const router = useRouter();
-
-  
-  const schema = yup.object({
-    email: yup.string().email("Enter a valid email").required("Email is required"),
-    password: yup.string().required("Password is required"),
-  });
-
-  // Setting up react-hook-form
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: yupResolver(schema),
-  });
-
-  // Handle the login functionality
-  const handleLogin = async (formData) => {
-    const { email, password } = formData;
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Login successful!");
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData?.user?.id;
-      console.log(userId); // Get logged-in user's ID
-      if (userId) {
-        setTimeout(() => router.push(`/chat/${userId}`), 2000); // ✅ Redirect dynamically
-      }
-    }
-  };
-
-  
+ import { useForm } from "react-hook-form";
+ import { yupResolver } from "@hookform/resolvers/yup";
+ import * as yup from "yup";
+ import { toast } from "react-hot-toast";
+ import { useRouter } from "next/navigation";
+ import Link from "next/link";
+ 
+ const Login = () => {
+ 
+   const router = useRouter();
+ 
+   const schema = yup.object({
+     email: yup.string().email("Enter a valid email").required("Email is required"),
+     password: yup.string().required("Password is required"),
+   });
+ 
+   const { register, handleSubmit, formState: { errors } } = useForm({
+     resolver: yupResolver(schema),
+   });
+ 
+   const handleLogin = async (formData) => {
+     const { email, password } = formData;
+ 
+     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+ 
+     if (error) {
+       toast.error(error.message);
+     } else {
+       toast.success("Login successful!");
+       setTimeout(() => router.push("/about"), 2000);
+       const { data: userData } = await supabase.auth.getUser();
+       const userId = userData?.user?.id;
+       console.log(userId) // Get logged-in user's ID
+       if (userId) {
+         setTimeout(() => router.push(`/chat/${userId}`), 2000); // ✅ Redirect dynamically
+       }
+     }
+   };
   return (
     <>
       <section className="min-h-screen w-full flex justify-center items-center bg-gray-100">
