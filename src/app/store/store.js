@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-
-import{ create} from "zustand";
+import { set } from "react-hook-form";
+import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 const useUserStore = create(
@@ -11,18 +11,14 @@ const useUserStore = create(
       isLoggedIn: false,
       signupData: null,
 
-      
       setUser: (userData) => set({ user: userData, isLoggedIn: true }),
 
-    
       resetUser: () => set({ user: null, isLoggedIn: false }),
 
-      
-      setSignupData: (signupData) =>
-        set({ signupData, isLoggedIn: false }),
+      setSignupData: (signupData) => set({ signupData, isLoggedIn: false }),
     }),
     {
-      name: 'user-store', 
+      name: "user-store",
       partialize: (state) => ({
         user: state.user,
         isLoggedIn: state.isLoggedIn,
@@ -31,12 +27,23 @@ const useUserStore = create(
     }
   )
 );
- 
 
- const useSelectedUserStore = create((set) => ({
-   selectedUser: null,  
-   setSelectedUser: (user) => set({ selectedUser: user }),  
-   resetSelectedUser: () => set({ selectedUser: null }),  
- }));
- 
- export { useUserStore,useSelectedUserStore };
+const useUserProfile = create(
+  persist(
+    (set) => ({
+      userProfile: null,
+      setUserProfile: (profileData) => set({ userProfile: profileData }),
+      resetUserProfile: () => set({ userProfile: null }),
+    }),
+    {
+      name: "user-profile-store",
+    }
+  )
+);
+const useSelectedUserStore = create((set) => ({
+  selectedUser: null,
+  setSelectedUser: (user) => set({ selectedUser: user }),
+  resetSelectedUser: () => set({ selectedUser: null }),
+}));
+
+export { useUserStore, useSelectedUserStore , useUserProfile };

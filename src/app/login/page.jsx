@@ -66,7 +66,7 @@ const setUser = useUserStore((state)=>state.setUser)
             <div className="relative mb-8">
               <label
                 htmlFor="email"
-                className="block mb-2 text-sm font-medium text-gray-900"
+                className="block mb-1 font-bold text-gray-700"
               >
                 Email address
               </label>
@@ -75,7 +75,7 @@ const setUser = useUserStore((state)=>state.setUser)
                 id="email"
                 name="email"
                 {...register("email")}
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-red-600">{errors.email?.message}</p>
             </div>
@@ -83,7 +83,7 @@ const setUser = useUserStore((state)=>state.setUser)
             <div className="relative mb-8">
               <label
                 htmlFor="password"
-                className="block mb-2 text-sm font-medium text-gray-900"
+                className="block mb-1 font-bold text-gray-700"
               >
                 Password
               </label>
@@ -92,7 +92,7 @@ const setUser = useUserStore((state)=>state.setUser)
                 id="password"
                 name="password"
                 {...register("password")} 
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg w-full p-2.5"
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <p className="text-red-600">{errors.password?.message}</p>
             </div>
@@ -107,9 +107,9 @@ const setUser = useUserStore((state)=>state.setUser)
             <div className="mt-5 text-center">
               <p>
                 Don't have an account?
-                <Link href="/signup" className="font-bold">
+                <Link href="/signup" className="font-bold text-blue-600">
                   {" "}
-                  Sign up Here
+                  Sign Up Here
                 </Link>
               </p>
             </div>

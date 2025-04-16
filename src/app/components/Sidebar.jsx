@@ -48,7 +48,7 @@ import  supabase  from "../lib/supabase";
  
    return (
      <>
-       <div className="w-1/4 bg-gray-800 text-white p-4">
+       <div className="h-screen bg-gray-800 text-white p-4">
          <h2 className="text-lg font-bold mb-4">Users</h2>
          {otherUsers.map((u) => (
            <div

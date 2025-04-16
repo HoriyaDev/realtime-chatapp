@@ -2,6 +2,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelectedUserStore, useUserStore } from '@/app/store/store';
+import { IoCall, IoVideocam } from "react-icons/io5";
+import { IoMdSend } from "react-icons/io";
+import { format } from 'date-fns';
+
 import supabase from '@/app/lib/supabase';
 
 const ChatWindow = () => {
@@ -32,6 +36,7 @@ const ChatWindow = () => {
       console.error('❌ Error fetching messages:', error.message);
     } else {
       setShowMessage(data);
+      console.log(data.created_at);
     }
   };
 
@@ -104,25 +109,38 @@ const ChatWindow = () => {
   }, [senderId, receiverId]);
 
   return (
-    <div className="flex flex-col justify-between h-screen p-4">
+    <div className="bg-white w-full h-screen flex flex-col">
       {/* Header */}
-      <div className="bg-red-300 p-4 rounded font-semibold text-lg">
-        {selectedUserName}
-      </div>
+      <header className="bg-[#F9FAFB] text-[#1F2937] flex items-center justify-between p-3 shadow-md">
+        {/* Left Side (Profile + Name) */}
+        <div className="flex items-center gap-3">
+          <img
+            src="Profile.jpg"
+            className="w-12 h-12 border-2 border-[#3B82F6] rounded-full object-cover"
+          />
+          <h1 className="text-lg font-semibold">{selectedUserName}</h1>
+        </div>
 
+        {/* Right Side (Icons) */}
+        <div className="flex items-center gap-3">
+          <IoCall size={24} className="hover:text-[#60A5FA] cursor-pointer transition" />
+          <IoVideocam size={24} className="hover:text-[#60A5FA] cursor-pointer transition" />
+        </div>
+      </header>
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto mt-4 mb-2">
+      <div className="flex-1 overflow-y-auto mt-4 mb-2 ">
         {showMessage.length > 0 ? (
           showMessage.map((msg) => (
             <div
               key={msg.id}
-              className={`p-2 m-1 rounded max-w-[75%] ${
+              className={`p-2 m-1 rounded max-w-fit ${
                 msg.sender_id === senderId
                   ? 'bg-blue-100 text-right ml-auto'
                   : 'bg-gray-100 text-left mr-auto'
               }`}
             >
               <p>{msg.message}</p>
+              <p>  {format(new Date(msg.created_at), 'p')}</p>
             </div>
           ))
         ) : (
@@ -132,11 +150,11 @@ const ChatWindow = () => {
       </div>
 
       {/* Input */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center p-3 bg-[#F9FAFB] shadow-md">
         <input
           type="text"
           placeholder="Type a message"
-          className="flex-1 p-2 border border-gray-300 rounded"
+        className="p-2 w-full border border-[#babcc0] rounded-full focus:ring-2 focus:ring-[#3B82F6] outline-none bg-white text-[#1F2937]"
           value={sendMessage}
           onChange={(e) => setSendMessage(e.target.value)}
           onKeyDown={(e) => {
@@ -144,10 +162,10 @@ const ChatWindow = () => {
           }}
         />
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="p-3 bg-[#3B82F6] text-white rounded-full ml-3 hover:bg-blue-700 transition"
           onClick={handleSendMessage}
         >
-          Send
+         <IoMdSend size={20} />
         </button>
       </div>
     </div>

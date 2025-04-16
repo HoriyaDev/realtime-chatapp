@@ -9,17 +9,28 @@ import supabase from "../lib/supabase";
  import { toast } from "react-hot-toast";
 
  import {useUserStore} from "../store/store";
+ import { BiSolidShow ,BiSolidHide  } from "react-icons/bi";
 
  
  const Signup = () => {
    const [image, setImage] = useState(null);
    const [imageFile, setImageFile] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);  
+  const [passwordTyping, setPasswordTyping] = useState(false);
+   const [confirmPasswordTyping, setConfirmPasswordTyping] = useState(false);
+   const [showConfirmPassword , setShowConfirmPassword] = useState(false )
    const router = useRouter();
 
    const setSignupData = useUserStore((state) => state.setSignupData) 
    const signupData = useUserStore((state)=>state.signupData)
 
- 
+ const togglePassword = () =>{
+  setShowPassword((prev) => !prev);
+
+ }
+ const toggleConfirmPassword = ()=>{
+  setShowConfirmPassword((prev) => !prev);
+ }
    // ✅ Validation Schema
    const schema = yup.object({
      userName: yup.string().required("Name is required"),
@@ -132,9 +143,9 @@ import supabase from "../lib/supabase";
            <div className="flex flex-col items-center mb-4">
              <label htmlFor="avatarUpload" className="cursor-pointer">
                <img
-                 src={image || "/default-user.png"}
-                 alt="Profile"
-                 className="w-24 h-24 rounded-full object-cover"
+                 src={image || 'default-user.png'}
+               
+                 className=" h-25 w-25 rounded-full bg-amber-300 object-scale-down"
                />
              </label>
              <input
@@ -175,31 +186,46 @@ import supabase from "../lib/supabase";
  
            {/* Password Fields */}
            <div className="flex flex-col md:flex-row gap-4">
-             <div className="flex-1">
-               <label className="block mb-1 font-bold text-gray-700">Password:</label>
+             <div className="flex-1 relative">
+               <label className="block mb-1 font-bold text-gray-700">Password</label>
                <input
-                 type="password"
+                 type={showPassword ? "text" : "password"}
                  {...register("password")}
-                 className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                 className="w-full pl-4 pr-12 py-2  border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                  placeholder="********"
+                 onChange={(e) => {
+                    setPasswordTyping(e.target.value.length > 0);
+                   
+
+                 }}
                />
+              {passwordTyping && 
+               <button className="absolute inset-y-0 right-3 mt-6 z-10 text-gray-700" onClick={togglePassword} type="button">
+               {showPassword ? <BiSolidShow size={20}  /> : <BiSolidHide size={20} />}
+             </button>
+             }
                <p className="text-red-600">{errors.password?.message}</p>
              </div>
  
-             <div className="flex-1">
-               <label className="block mb-1 font-bold text-gray-700">Confirm Password:</label>
+             <div className="flex-1 relative">
+               <label className="block mb-1 font-bold text-gray-700">Confirm Password</label>
                <input
-                 type="password"
+                 type={showConfirmPassword ? "text" : "password"}
                  {...register("confirmPassword")}
                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                  placeholder="********"
+                 onChange={(e) => {
+                  setConfirmPasswordTyping(e.target.value.length > 0);
+                 }}
                />
+                {confirmPasswordTyping && 
+                <button className="absolute inset-y-0 right-3 mt-6 z-10 text-gray-700" onClick={toggleConfirmPassword} type="button">  {showConfirmPassword ? <BiSolidShow size={20}  /> : <BiSolidHide size={20} />}  </button>}
                <p className="text-red-600">{errors.confirmPassword?.message}</p>
              </div>
            </div>
  
            {/* Submit Button */}
-           <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
+           <button type="submit" className="w-full mt-5 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition">
              Submit
            </button>
          </form>
