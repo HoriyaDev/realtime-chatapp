@@ -23,14 +23,14 @@ const Navigation = () => {
   return (
     <TabGroup manual className="flex h-screen transition-all duration-300">
       {/* Sidebar */}
-      <TabList className="flex flex-col w-16 mx-auto bg-[#F9FAFB] text-[#1F2937] items-center shadow-lg">
+      <TabList className="flex flex-col w-16 mx-auto bg-[#eeeff0] text-[#1F2937] items-center shadow-lg">
         <Tab className="cursor-pointer flex items-center justify-center w-full h-12 focus:outline-none hover:bg-[#E5E7EB] transition">
-          <PiChatCircleTextLight size={30} className="text-[#3B82F6]" />
+          <PiChatCircleTextLight size={30}  />
         </Tab>
         <Tab className="flex items-center justify-center cursor-pointer w-full h-12 focus:outline-none hover:bg-[#E5E7EB] transition">
           <img
             src={userProfile?.profile_pic || '/default-user.png'}
-            className="w-10 h-10 rounded-full object-cover border-2 border-[#3B82F6]"
+            className="w-10 h-10 rounded-full object-cover"
             alt="Profile"
           />
         </Tab>

@@ -52,7 +52,7 @@ const setUserProfile = useUserProfile((state) => state.setUserProfile);
   }, []);
 
   return (
-    <div className="bg-gray-100 h-screen">
+    <div className=" h-screen">
       <p className="font-semibold text-2xl p-4">Profile</p>
 
       <div className="py-5 flex flex-col items-center">

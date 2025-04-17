@@ -145,7 +145,7 @@ import supabase from "../lib/supabase";
                <img
                  src={image || 'default-user.png'}
                
-                 className=" h-25 w-25 rounded-full bg-amber-300 object-scale-down"
+                 className=" h-25 w-25 rounded-full  object-scale-down"
                />
              </label>
              <input
