@@ -46,4 +46,16 @@ const useSelectedUserStore = create((set) => ({
   resetSelectedUser: () => set({ selectedUser: null }),
 }));
 
-export { useUserStore, useSelectedUserStore , useUserProfile };
+//tping indicator
+
+const useTypingIndicatorStore = create((set) => ({
+isTyping: false,
+theirTyping:false,
+
+setIsTyping: (typing) => set({ isTyping:typing }),
+setTheirTyping: (theirTyping) => set({ theirTyping }),
+
+
+}))
+
+export { useUserStore, useSelectedUserStore , useUserProfile , useTypingIndicatorStore };
