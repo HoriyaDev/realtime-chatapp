@@ -27,6 +27,7 @@ const useUserStore = create(
     }
   )
 );
+// logged in user profile
 
 const useUserProfile = create(
   persist(
@@ -46,6 +47,22 @@ const useSelectedUserStore = create((set) => ({
   resetSelectedUser: () => set({ selectedUser: null }),
 }));
 
+
+//show the add new users
+
+const useAddUserStore = create((set) => ({
+  addUser: null,
+  setAddUser: (user) => set({ addUser: user }),
+  selectedUsers: [],
+  addToSelectedUsers: (user) =>
+    set((state) => ({
+      selectedUsers: [...state.selectedUsers, user],
+    })),
+}));
+
+
+
+
 //tping indicator
 
 const useTypingIndicatorStore = create((set) => ({
@@ -58,4 +75,4 @@ setTheirTyping: (theirTyping) => set({ theirTyping }),
 
 }))
 
-export { useUserStore, useSelectedUserStore , useUserProfile , useTypingIndicatorStore };
+export { useUserStore, useSelectedUserStore , useUserProfile , useTypingIndicatorStore , useAddUserStore};
