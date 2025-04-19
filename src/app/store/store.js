@@ -50,29 +50,35 @@ const useSelectedUserStore = create((set) => ({
 
 //show the add new users
 
-const useAddUserStore = create((set) => ({
-  addUser: null,
-  setAddUser: (user) => set({ addUser: user }),
-  selectedUsers: [],
-  addToSelectedUsers: (user) =>
-    set((state) => ({
-      selectedUsers: [...state.selectedUsers, user],
-    })),
-}));
-
+const useAddUserStore = create(
+  persist(
+    (set) => ({
+      selectedUsers: [],
+      addUser: null,
+      setAddUser: (user) => set({ addUser: user }),
+      addToSelectedUsers: (user) =>
+        set((state) => ({
+          selectedUsers: [...state.selectedUsers, user],
+        })),
+    }),
+    {
+      name: "user-store", // localStorage key
+    }
+  )
+);
 
 
 
 //tping indicator
 
 const useTypingIndicatorStore = create((set) => ({
-isTyping: false,
-theirTyping:false,
+  isTyping: false, // Local typing status
+  theirTyping: false, // Their typing status
+  currentChatId: null, // Track the currently active chat
 
-setIsTyping: (typing) => set({ isTyping:typing }),
-setTheirTyping: (theirTyping) => set({ theirTyping }),
-
-
-}))
+  setIsTyping: (typing) => set({ isTyping: typing }),
+  setTheirTyping: (theirTyping) => set({ theirTyping }),
+  setCurrentChatId: (chatId) => set({ currentChatId: chatId }), // Set active chat ID
+}));
 
 export { useUserStore, useSelectedUserStore , useUserProfile , useTypingIndicatorStore , useAddUserStore};
