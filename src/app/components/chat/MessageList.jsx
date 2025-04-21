@@ -8,6 +8,7 @@ const MessageList = () => {
   const { selectedUser } = useSelectedUserStore();
   const user = useUserStore((state) => state.user);
   const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false); // 🟢 FIXED
 
   const receiverId = selectedUser?.auth_id;
   const senderId = user?.id;
@@ -67,6 +68,28 @@ const MessageList = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Typing indicator subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('typing-channel')
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        const { sender_id, receiver_id } = payload.payload;
+
+        if (
+          sender_id === receiverId &&
+          receiver_id === senderId
+        ) {
+          setIsTyping(true);
+          setTimeout(() => setIsTyping(false), 2000);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [receiverId, senderId]);
+
   return (
     <div className="space-y-2 px-4 py-2">
       {messages.map((msg) => (
@@ -81,6 +104,11 @@ const MessageList = () => {
           {msg.message}
         </div>
       ))}
+
+      {/* Typing Indicator */}
+      {isTyping && (
+        <div className="text-sm italic text-gray-500">Typing...</div>
+      )}
 
       <div ref={messagesEndRef} />
     </div>

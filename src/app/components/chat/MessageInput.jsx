@@ -45,7 +45,19 @@ const MessageInput = () => {
     // Clear input after sending
     setInput(chatId, "");
   };
-
+  const handleTyping = () => {
+    if (!senderId || !receiverId) return;
+  
+    supabase.channel('typing-channel').send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: {
+        sender_id: senderId,
+        receiver_id: receiverId,
+      },
+    });
+  };
+  
   return (
     <div className="flex items-center p-3 bg-[#f1f2f4] shadow-inner">
       <input
@@ -53,7 +65,11 @@ const MessageInput = () => {
         placeholder="Type a message"
         className="p-2 w-full border border-gray-300 rounded-full focus:ring-2 focus:ring-[#3B82F6] outline-none bg-white text-[#1F2937]"
         value={input}
-        onChange={(e) => setInput(chatId, e.target.value)}
+       
+        onChange={(e) => {
+            setInput(chatId, e.target.value)
+            handleTyping();
+          }}
         onKeyDown={(e) => {
           if (e.key === "Enter") handleSendMessage();
         }}
