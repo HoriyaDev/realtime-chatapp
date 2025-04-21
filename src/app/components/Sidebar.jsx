@@ -1,107 +1,84 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import AddUser from "../modal/AddUser";
-import {
-  useSelectedUserStore,
-  useAddUserStore,
-  useUserStore,
-  useTypingIndicatorStore
-} from "../store/store";
 import supabase from "../lib/supabase";
+import { useRouter } from "next/navigation";
+import { useSelectedUserStore } from "../store/store";
 import { IoSearchOutline } from "react-icons/io5";
 
 const Sidebar = () => {
+  const [user, setUser] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [otherUsers, setOtherUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [latestMessages, setLatestMessages] = useState({});
-  const [unreadCounts, setUnreadCounts] = useState({});
+  const [recentMessages, setRecentMessages] = useState({});
 
+  const router = useRouter();
   const setSelectedUser = useSelectedUserStore((state) => state.setSelectedUser);
-  const selectedUsers = useAddUserStore((state) => state.selectedUsers);
-  const userData = useUserStore((state) => state.user);
-  const senderId = userData?.id;
 
+  // Fetch current user and all other users
+  const fetchUserAndOthers = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    const currentUser = authData?.user;
 
-  const { setCurrentChatId, theirTyping, currentChatId } = useTypingIndicatorStore();
-  const handleOpen = () => {
-    setIsOpen(!isOpen);
-  };
+    if (currentUser) {
+      setUser(currentUser);
+      setUserId(currentUser.id);
 
-  const handleClick = async (user) => {
-    setSelectedUser(user);
-    setCurrentChatId(user.auth_id);
-    const receiverId = user.auth_id;
+      const { data: users, error } = await supabase
+        .from("users")
+        .select("*")
+        .neq("auth_id", currentUser.id);
 
-    const { error } = await supabase
-      .from("messages")
-      .update({ is_read: true })
-      .match({
-        sender_id: receiverId,
-        receiver_id: senderId,
-        is_read: false,
-      });
-
-    if (!error) {
-      setLatestMessages((prev) => {
-        const updated = { ...prev };
-        const msg = updated[receiverId];
-        if (msg && msg.receiver_id === senderId) {
-          updated[receiverId] = { ...msg, is_read: true };
-        }
-        return updated;
-      });
-
-      setUnreadCounts((prev) => ({
-        ...prev,
-        [receiverId]: 0,
-      }));
+      if (!error) {
+        setOtherUsers(users || []);
+        fetchRecentMessages(users, currentUser.id);
+      } else {
+        console.error("Error fetching users:", error);
+      }
     }
   };
 
-  const filteredUsers = selectedUsers.filter((u) =>
-    u.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Fetch latest message for each user
+  const fetchRecentMessages = async (users, currentUserId) => {
+    const newRecentMessages = {};
 
-  useEffect(() => {
-    if (!senderId || selectedUsers.length === 0) return;
+    for (let u of users) {
+      const { data: messageData } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${currentUserId},receiver_id.eq.${u.auth_id}),and(sender_id.eq.${u.auth_id},receiver_id.eq.${currentUserId})`
+        )
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-    const fetchMessages = async () => {
-      const newMessages = {};
-      const newUnread = {};
-
-      for (const user of selectedUsers) {
-        const receiverId = user.auth_id;
-
-        const { data, error } = await supabase
+      if (messageData && messageData.length > 0) {
+        const msg = messageData[0];
+        const unreadCount = await supabase
           .from("messages")
-          .select("id, message, sender_id, receiver_id, is_read, created_at")
-          .or(
-            `and(sender_id.eq.${senderId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${senderId})`
-          )
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        if (!error && data.length > 0) {
-          const latestMsg = data[0];
-          newMessages[receiverId] = latestMsg;
-
-          // ✅ Only count if latest message is sent TO user and is unread
-          newUnread[receiverId] =
-            latestMsg.receiver_id === senderId && !latestMsg.is_read ? 1 : 0;
-        } else {
-          newUnread[receiverId] = 0;
-        }
+          .select("*")
+          .eq("receiver_id", currentUserId)
+          .eq("sender_id", u.auth_id)
+          .eq("is_read", false);
+        
+        newRecentMessages[u.auth_id] = {
+          message: msg.message,
+          isReceiver: msg.sender_id !== currentUserId && !msg.is_read,
+          unreadCount: unreadCount.length,
+        };
       }
+    }
 
-      setLatestMessages(newMessages);
-      setUnreadCounts(newUnread);
-    };
+    setRecentMessages(newRecentMessages);
+  };
 
-    fetchMessages();
+  // Real-time update (without full re-fetch)
+  useEffect(() => {
+    fetchUserAndOthers();
 
-    const messageChannel = supabase
-      .channel("messages-channel")
+    const channel = supabase
+      .channel("messages-updates")
       .on(
         "postgres_changes",
         {
@@ -110,22 +87,27 @@ const Sidebar = () => {
           table: "messages",
         },
         (payload) => {
-          const newMsg = payload.new;
-          const otherUserId =
-            newMsg.sender_id === senderId
-              ? newMsg.receiver_id
-              : newMsg.sender_id;
+          const { new: newMessage } = payload;
 
-          setLatestMessages((prev) => ({
+          // For receiver (user receiving the message)
+          setRecentMessages((prev) => ({
             ...prev,
-            [otherUserId]: newMsg,
+            [newMessage.sender_id]: {
+              message: newMessage.message,
+              isReceiver: newMessage.sender_id !== userId,
+              unreadCount: prev[newMessage.sender_id]?.unreadCount + 1 || 1,
+            },
           }));
 
-          if (newMsg.receiver_id === senderId && !newMsg.is_read) {
-            
-            setUnreadCounts((prev) => ({
+          // For sender (user sending the message)
+          if (newMessage.sender_id === userId) {
+            setRecentMessages((prev) => ({
               ...prev,
-              [newMsg.sender_id]: (prev[newMsg.sender_id] || 0) + 1,
+              [newMessage.receiver_id]: {
+                message: newMessage.message,
+                isReceiver: false, // Mark as read or already seen on sender's side
+                unreadCount: 0, // Sender doesn't need a "new message" count
+              },
             }));
           }
         }
@@ -133,9 +115,43 @@ const Sidebar = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(messageChannel);
+      supabase.removeChannel(channel);
     };
-  }, [senderId, selectedUsers]);
+  }, [userId]);
+
+  // On user click: open chat + mark as read
+  const handleClick = async (selectedUser) => {
+    setSelectedUser(selectedUser);
+
+    const { data: latestMsg } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("sender_id", selectedUser.auth_id)
+      .eq("receiver_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (latestMsg && !latestMsg.is_read) {
+      await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("id", latestMsg.id);
+
+      setRecentMessages((prev) => ({
+        ...prev,
+        [selectedUser.auth_id]: {
+          ...prev[selectedUser.auth_id],
+          isReceiver: false,
+          unreadCount: 0,
+        },
+      }));
+    }
+  };
+
+  const filteredUsers = otherUsers.filter((u) =>
+    u.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="h-screen p-4 flex flex-col">
@@ -152,65 +168,46 @@ const Sidebar = () => {
             className="w-full outline-none bg-transparent text-sm pl-4"
           />
         </div>
-
-        <button
-          onClick={handleOpen}
-          className="mt-3 bg-blue-500 text-white px-4 py-1 rounded"
-        >
-          Add
-        </button>
       </div>
 
       <div className="mt-4 overflow-y-auto custom-scrollbar pr-1 max-h-[calc(100vh-150px)]">
         {filteredUsers.length > 0 ? (
-          filteredUsers.map((user, index) => {
-            const msg = latestMessages[user.auth_id];
-            const unreadCount = unreadCounts[user.auth_id] || 0;
-
-            return (
-              <div
-                key={index}
-                onClick={() => handleClick(user)}
-                className="flex flex-col gap-1 p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer relative"
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={user.profile_pic}
-                    className="w-10 h-10 object-cover rounded-full"
-                    alt={user.name}
-                  />
-                  <p className="font-medium">{user.name}</p>
-                  {theirTyping && user.auth_id !== currentChatId && (
-                    <p>typing....</p>
-                  )}
-
-                  {unreadCount > 0 && (
-                    <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                      {unreadCount}
-                    </span>
-                  )}
-                </div>
-
-                {msg && (
+          filteredUsers.map((u) => (
+            <div
+              key={u.id}
+              onClick={() => handleClick(u)}
+              className="py-2 px-2 border-b border-gray-300 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+            >
+              <div className="flex gap-3 items-center">
+                <img
+                  src={u.profile_pic}
+                  alt="profile"
+                  className="w-10 h-10 object-cover rounded-full"
+                />
+                <div className="flex flex-col">
+                  <p className="font-medium">{u.name}</p>
                   <p
-                    className={`text-sm ml-12 truncate ${
-                      !msg.is_read && msg.receiver_id === senderId
+                    className={`text-sm ${
+                      recentMessages[u.auth_id]?.isReceiver
                         ? "font-bold"
-                        : "font-normal"
+                        : "text-gray-500"
                     }`}
                   >
-                    {msg.message}
+                    {recentMessages[u.auth_id]?.message || "No messages yet"}
                   </p>
+                </div>
+                {recentMessages[u.auth_id]?.unreadCount > 0 && (
+                  <div className="flex items-center justify-center w-5 h-5 bg-red-500 text-white rounded-full text-xs">
+                    {recentMessages[u.auth_id]?.unreadCount}
+                  </div>
                 )}
               </div>
-            );
-          })
+            </div>
+          ))
         ) : (
           <p className="text-gray-400 mt-6 text-center">No users found</p>
         )}
       </div>
-
-      {isOpen && <AddUser isOpen={isOpen} onClose={handleOpen} />}
     </div>
   );
 };
