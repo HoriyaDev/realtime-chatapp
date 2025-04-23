@@ -1,19 +1,29 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useSelectedUserStore, useUserStore } from '@/app/store/store';
+import { useSelectedUserStore, useUserStore , useChatStore } from '@/app/store/store';
 import supabase from '@/app/lib/supabase';
 
 const MessageList = () => {
   const { selectedUser } = useSelectedUserStore();
   const user = useUserStore((state) => state.user);
   const [messages, setMessages] = useState([]);
-  const [isTyping, setIsTyping] = useState(false); // 🟢 FIXED
+  const [isTyping, setIsTyping] = useState(false);
+  
+
+  const {setEditingId , setInput} = useChatStore()
+  // 🟢 FIXED
 
   const receiverId = selectedUser?.auth_id;
   const senderId = user?.id;
 
   const messagesEndRef = useRef(null);
+
+  const handleEdit = (msgId , text) => {
+    setEditingId(msgId)
+    setInput(selectedUser?.id , text)
+ 
+  };
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -102,6 +112,12 @@ const MessageList = () => {
           }`}
         >
           {msg.message}
+          {msg.id}
+          {msg.sender_id === senderId && (
+  <button className='ml-10 cursor-pointer' onClick={() => handleEdit(msg.id, msg.message)}>Edit</button>
+)}
+
+          
         </div>
       ))}
 

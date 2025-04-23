@@ -36,16 +36,25 @@ const useSelectedUserStore = create(
 
 
 const useChatStore = create((set, get) => ({
-  chats: {}, // object to store input for each chat
+  chats: {},
+  editingId: "",
+  
+  setEditingId: (id) => set(() => ({ editingId: id })),
+
   setInput: (chatId, input) => set((state) => {
-    const chats = { ...state.chats, [chatId]: { ...state.chats[chatId], input } };
+    const chats = { 
+      ...state.chats, 
+      [chatId]: { ...state.chats[chatId], input } 
+    };
     return { chats };
   }),
+
   getInput: (chatId) => {
-    const state = get(); // Access the latest state using get()
-    return state.chats[chatId]?.input || ''; // Return input for a specific chat, or an empty string if not found
+    const state = get();
+    return state.chats[chatId]?.input || '';
   },
 }));
+
 const useTypingIndicatorStore = create(
   devtools( // Devtools on typing store
     (set) => ({
