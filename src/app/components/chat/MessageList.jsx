@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { useSelectedUserStore, useUserStore , useChatStore } from '@/app/store/store';
+import { useSelectedUserStore, useUserStore, useChatStore } from '@/app/store/store';
 import supabase from '@/app/lib/supabase';
 
 const MessageList = () => {
@@ -9,20 +9,26 @@ const MessageList = () => {
   const user = useUserStore((state) => state.user);
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
-  
 
-  const {setEditingId , setInput} = useChatStore()
-  // 🟢 FIXED
+  const { setEditingId, setInput } = useChatStore();
 
   const receiverId = selectedUser?.auth_id;
   const senderId = user?.id;
-
   const messagesEndRef = useRef(null);
 
-  const handleEdit = (msgId , text) => {
-    setEditingId(msgId)
-    setInput(selectedUser?.id , text)
- 
+  const handleEdit = (msgId, text) => {
+    setEditingId(msgId);
+    setInput(selectedUser?.id, text);
+  };
+
+  const handleDelete = async (msgId) => {
+    const { error } = await supabase.from('messages').delete().eq('id', msgId);
+
+    if (error) {
+      console.error('❌ Error deleting message:', error.message);
+    } else {
+      setMessages((prev) => prev.filter((msg) => msg.id !== msgId));
+    }
   };
 
   useEffect(() => {
@@ -66,6 +72,38 @@ const MessageList = () => {
           }
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const updatedMessage = payload.new;
+
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg.id === updatedMessage.id ? { ...msg, message: updatedMessage.message } : msg
+            )
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+        },
+        (payload) => {
+          const deletedId = payload.old.id;
+
+          setMessages((prevMessages) =>
+            prevMessages.filter((msg) => msg.id !== deletedId)
+          );
+        }
+      )
       .subscribe();
 
     return () => {
@@ -73,22 +111,17 @@ const MessageList = () => {
     };
   }, [senderId, receiverId]);
 
-  // Auto-scroll to latest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Typing indicator subscription
   useEffect(() => {
     const channel = supabase
       .channel('typing-channel')
       .on('broadcast', { event: 'typing' }, (payload) => {
         const { sender_id, receiver_id } = payload.payload;
 
-        if (
-          sender_id === receiverId &&
-          receiver_id === senderId
-        ) {
+        if (sender_id === receiverId && receiver_id === senderId) {
           setIsTyping(true);
           setTimeout(() => setIsTyping(false), 2000);
         }
@@ -112,19 +145,26 @@ const MessageList = () => {
           }`}
         >
           {msg.message}
-          {msg.id}
           {msg.sender_id === senderId && (
-  <button className='ml-10 cursor-pointer' onClick={() => handleEdit(msg.id, msg.message)}>Edit</button>
-)}
-
-          
+            <>
+              <button
+                className="ml-4 text-sm underline cursor-pointer"
+                onClick={() => handleEdit(msg.id, msg.message)}
+              >
+                Edit
+              </button>
+              <button
+                className="ml-2 text-sm underline text-red-600 cursor-pointer"
+                onClick={() => handleDelete(msg.id)}
+              >
+                Delete
+              </button>
+            </>
+          )}
         </div>
       ))}
 
-      {/* Typing Indicator */}
-      {isTyping && (
-        <div className="text-sm italic text-gray-500">Typing...</div>
-      )}
+      {isTyping && <div className="text-sm italic text-gray-500">Typing...</div>}
 
       <div ref={messagesEndRef} />
     </div>

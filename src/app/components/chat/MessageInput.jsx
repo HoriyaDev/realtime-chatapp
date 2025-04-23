@@ -2,9 +2,11 @@
 import React from "react";
 import { IoMdSend } from "react-icons/io";
 import { useSelectedUserStore, useChatStore, useUserStore } from "@/app/store/store";
-import supabase from "@/app/lib/supabase"; // Make sure this path is correct
+import supabase from "@/app/lib/supabase";
+
 
 const MessageInput = () => {
+  const [showPicker, setShowPicker] = useState(false);
   const { selectedUser } = useSelectedUserStore();
   const chatId = selectedUser?.id;
 
@@ -16,6 +18,8 @@ const MessageInput = () => {
   const setInput = useChatStore((state) => state.setInput);
   const editingId = useChatStore((state) => state.editingId);
   const setEditingId = useChatStore((state) => state.setEditingId);
+ 
+
 
   const handleSendMessage = async () => {
     if (!input.trim()) return;
@@ -89,6 +93,7 @@ const MessageInput = () => {
         }}
         autoFocus
       />
+       
       <button
         className="p-3 bg-[#3B82F6] text-white rounded-full ml-3 hover:bg-blue-700 transition"
         onClick={handleSendMessage}

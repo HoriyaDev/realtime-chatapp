@@ -38,8 +38,13 @@ const useSelectedUserStore = create(
 const useChatStore = create((set, get) => ({
   chats: {},
   editingId: "",
+  deletingId:"",
   
+  
+
+  setDeletingId: (id) => set({ deletingId: id }),
   setEditingId: (id) => set(() => ({ editingId: id })),
+  
 
   setInput: (chatId, input) => set((state) => {
     const chats = { 
