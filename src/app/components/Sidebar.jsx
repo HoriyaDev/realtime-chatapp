@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import supabase from "../lib/supabase";
 import { useSelectedUserStore, useAddUserStore } from "../store/store";
 import { IoSearchOutline } from "react-icons/io5";
+import AddUser from "../modal/AddUser"; // Assuming you have this component for adding users
 
 const Sidebar = () => {
   const [userId, setUserId] = useState(null);
@@ -13,12 +14,10 @@ const Sidebar = () => {
   const setSelectedUser = useSelectedUserStore((state) => state.setSelectedUser);
   const { selectedUsers } = useAddUserStore();
 
-
-
-
   const handleOpen = () => {
     setIsOpen(!isOpen);
   };
+
   const fetchUserAndOthers = async () => {
     const { data: authData } = await supabase.auth.getUser();
     const currentUser = authData?.user;
@@ -55,12 +54,14 @@ const Sidebar = () => {
       if (messageData && messageData.length > 0) {
         const msg = messageData[0];
 
+        // Get unread messages after this last message
         const { data: unreadMessages } = await supabase
           .from("messages")
           .select("*", { count: "exact" })
           .eq("sender_id", u.auth_id)
           .eq("receiver_id", currentUserId)
-          .eq("is_read", false);
+          .eq("is_read", false)
+          .gt("created_at", msg.created_at); // Filter unread after this message
 
         newRecentMessages[u.auth_id] = {
           message: msg.message,
@@ -138,7 +139,7 @@ const Sidebar = () => {
         ...prev,
         [selectedUser.auth_id]: {
           ...prev[selectedUser.auth_id],
-          unreadCount: 0,
+          unreadCount: 0, // Reset unread count after reading
           isReceiver: false,
         },
       }));
@@ -190,6 +191,7 @@ const Sidebar = () => {
                 />
                 <div className="flex flex-col flex-1">
                   <p className="font-medium">{u.name}</p>
+
                   <p
                     className={`text-sm truncate ${
                       recentMessages[u.auth_id]?.isReceiver

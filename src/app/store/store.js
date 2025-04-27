@@ -60,18 +60,6 @@ const useChatStore = create((set, get) => ({
   },
 }));
 
-const useTypingIndicatorStore = create(
-  devtools( // Devtools on typing store
-    (set) => ({
-      isTyping: false,
-      theirTyping: false,
-      currentChatId: null,
-      setIsTyping: (typing) => set({ isTyping: typing }),
-      setTheirTyping: (theirTyping) => set({ theirTyping }),
-      setCurrentChatId: (chatId) => set({ currentChatId: chatId }),
-    })
-  )
-);
 
 const useAddUserStore = create(
   persist(
@@ -91,4 +79,11 @@ const useAddUserStore = create(
 );
 
 
-export { useUserStore, useSelectedUserStore, useTypingIndicatorStore, useChatStore  , useAddUserStore };
+const useUserProfile = create(persist(
+(set) =>({
+  userProfile:'',
+  setUserProfile:(profile)=>set({userProfile: profile})
+})
+))
+
+export { useUserStore, useSelectedUserStore,useUserProfile,  useChatStore  , useAddUserStore };

@@ -14,7 +14,8 @@ const Profile = () => {
  
     profile_pic: "/default-user.png",
   });
-const setUserProfile = useUserProfile((state) => state.setUserProfile);
+
+  const {setUserProfile} = useUserProfile() 
   const fileInputRef = useRef(null);
 
   const handleInput = (e) => {
