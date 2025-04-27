@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelectedUserStore, useUserStore, useChatStore } from '@/app/store/store';
 import supabase from '@/app/lib/supabase';
+import { format } from "date-fns";
+import DropDown from '../dropdown/DropDown';
 
 const MessageList = () => {
   const { selectedUser } = useSelectedUserStore();
@@ -123,7 +125,7 @@ const MessageList = () => {
 
         if (sender_id === receiverId && receiver_id === senderId) {
           setIsTyping(true);
-          setTimeout(() => setIsTyping(false), 2000);
+          setTimeout(() => setIsTyping(false), 3000);
         }
       })
       .subscribe();
@@ -145,7 +147,12 @@ const MessageList = () => {
           }`}
         >
           {msg.message}
+          <p className="text-xs text-gray-500 mt-1">
+                {format(new Date(msg.created_at), "p")}
+              </p>
+
           {msg.sender_id === senderId && (
+            
             <>
               <button
                 className="ml-4 text-sm underline cursor-pointer"
@@ -167,6 +174,7 @@ const MessageList = () => {
       {isTyping && <div className="text-sm italic text-gray-500">Typing...</div>}
 
       <div ref={messagesEndRef} />
+      <DropDown />
     </div>
   );
 };

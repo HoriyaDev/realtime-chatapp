@@ -7,6 +7,8 @@ import { PiChatCircleTextLight } from 'react-icons/pi';
 import Profile from './Profile';
 import Sidebar from './Sidebar';
 
+
+
 const Navigation = () => {
   return (
     <TabGroup manual>

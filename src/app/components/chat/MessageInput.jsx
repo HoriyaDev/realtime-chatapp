@@ -1,8 +1,14 @@
 'use client';
-import React from "react";
+import React, { useState } from "react";
 import { IoMdSend } from "react-icons/io";
 import { useSelectedUserStore, useChatStore, useUserStore } from "@/app/store/store";
 import supabase from "@/app/lib/supabase";
+import data from '@emoji-mart/data';
+import dynamic from "next/dynamic";
+
+
+const Picker = dynamic(() => import('@emoji-mart/react'), { ssr: false });
+
 
 
 const MessageInput = () => {
@@ -18,14 +24,14 @@ const MessageInput = () => {
   const setInput = useChatStore((state) => state.setInput);
   const editingId = useChatStore((state) => state.editingId);
   const setEditingId = useChatStore((state) => state.setEditingId);
- 
 
+  const handleEmojiSelect = (emoji) => {
+    setInput(chatId, input + emoji.native); // Append to current input
+  };
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
-    if (!senderId || !receiverId) return;
+    if (!input.trim() || !senderId || !receiverId) return;
 
-    // Handle editing existing message
     if (editingId) {
       const { data, error } = await supabase
         .from("messages")
@@ -35,33 +41,24 @@ const MessageInput = () => {
 
       if (!error && data?.length) {
         console.log("✏️ Message edited:", data[0]);
-        setEditingId(null); // Reset editing state
+        setEditingId(null);
       } else {
         console.log("❌ Error editing message:", error?.message);
       }
     } else {
-      // Insert new message
       const { data, error } = await supabase
         .from("messages")
-        .insert([
-          {
-            sender_id: senderId,
-            receiver_id: receiverId,
-            message: input.trim(),
-          },
-        ])
+        .insert([{ sender_id: senderId, receiver_id: receiverId, message: input.trim() }])
         .select();
 
       if (!error && data?.length > 0) {
         console.log("📨 Message sent:", data[0]);
-        // Real-time listener in MessageList will handle UI update
       } else {
         console.log("❌ Error sending message:", error?.message);
       }
     }
 
-    // Clear input field
-    setInput(chatId, "");
+    setInput(chatId, ""); // Clear input
   };
 
   const handleTyping = () => {
@@ -78,7 +75,7 @@ const MessageInput = () => {
   };
 
   return (
-    <div className="flex items-center p-3 bg-[#f1f2f4] shadow-inner">
+    <div className="flex items-center p-3 bg-[#f1f2f4] shadow-inner relative">
       <input
         type="text"
         placeholder="Type a message"
@@ -88,12 +85,23 @@ const MessageInput = () => {
           setInput(chatId, e.target.value);
           handleTyping();
         }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") handleSendMessage();
-        }}
+        onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
         autoFocus
       />
-       
+
+      {/* Emoji Button */}
+      <button onClick={() => setShowPicker(!showPicker)} className="ml-2 text-xl">
+        😊
+      </button>
+
+      {/* Emoji Picker */}
+      {showPicker && (
+        <div className="absolute bottom-16 right-2 z-50 md:bottom-20 md:right-4">
+          <Picker data={data} onEmojiSelect={handleEmojiSelect} theme="light" />
+        </div>
+      )}
+
+      {/* Send Button */}
       <button
         className="p-3 bg-[#3B82F6] text-white rounded-full ml-3 hover:bg-blue-700 transition"
         onClick={handleSendMessage}

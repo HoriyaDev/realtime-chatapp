@@ -73,4 +73,22 @@ const useTypingIndicatorStore = create(
   )
 );
 
-export { useUserStore, useSelectedUserStore, useTypingIndicatorStore, useChatStore };
+const useAddUserStore = create(
+  persist(
+    (set) => ({
+      selectedUsers: [],
+      addUser: null,
+      setAddUser: (user) => set({ addUser: user }),
+      addToSelectedUsers: (user) =>
+        set((state) => ({
+          selectedUsers: [...state.selectedUsers, user],
+        })),
+    }),
+    {
+      name: "user-store", // localStorage key
+    }
+  )
+);
+
+
+export { useUserStore, useSelectedUserStore, useTypingIndicatorStore, useChatStore  , useAddUserStore };

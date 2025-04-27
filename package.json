@@ -12,6 +12,8 @@
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
     "@headlessui/react": "^2.2.1",
+    "@heroicons/react": "^2.2.0",
+    "@heroui/dropdown": "^2.3.17",
     "@hookform/resolvers": "^5.0.1",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
