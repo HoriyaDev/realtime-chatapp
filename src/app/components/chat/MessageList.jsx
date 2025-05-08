@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useSelectedUserStore, useUserStore, useChatStore } from '@/app/store/store';
 import supabase from '@/app/lib/supabase';
 import { format } from "date-fns";
-import DropDown from '../dropdown/DropDown'; // ye dropdown component thoda update karenge
+import DropDown from '../dropdown/DropDown';
 
 const MessageList = () => {
   const { selectedUser } = useSelectedUserStore();
