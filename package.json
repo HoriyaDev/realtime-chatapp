@@ -11,32 +11,32 @@
   "dependencies": {
     "@emoji-mart/data": "^1.2.1",
     "@emoji-mart/react": "^1.1.1",
-    "@headlessui/react": "^2.2.1",
-    "@heroicons/react": "^2.2.0",
-    "@heroui/dropdown": "^2.3.17",
+    "@headlessui/react": "^2.2.2",
+    "@heroui/dropdown": "^2.3.19",
     "@hookform/resolvers": "^5.0.1",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
-    "bcryptjs": "^3.0.2",
     "date-fns": "^4.1.0",
     "emoji-mart": "^5.6.0",
     "lodash": "^4.17.21",
-    "lucide-react": "^0.483.0",
-    "next": "15.2.2",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-hook-form": "^7.55.0",
+    "lucide-react": "^0.508.0",
+    "next": "^15.3.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.56.3",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "yup": "^1.6.1",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.1.5",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.2.2",
-    "tailwindcss": "^4"
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.5"
   }
 }
